@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    // 封装的请求
+    const requestContent = (i) => {
+      return fetch("http://localhost:3001/test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          name: i,
+        }),
+      });
+    };
+
+    // 模拟100条数据需要请求
+    const requestList = Array.from({ length: 60 }).map((item, index) => index);
+    const requestListLength = requestList.length
+    const max = 6; // 最大请求数6
+    let currentTaskNum = 0; // 当前请求位
+    const aaa = []
+
+    // 请求池
+    const requestPool = () => {
+      if (currentTaskNum < max && requestList.length) {
+        // 从数据拿出一条放入请求里面
+        const curTask = requestContent(requestList.shift());
+        if (curTask && curTask.then) {
+          // 请求位+1
+          currentTaskNum++;
+          curTask
+            .then((res) => res.json())
+            .then((v) => {
+              // 返回成功 -1，并且再次调用
+              aaa.push(Promise.resolve(v))
+              if(aaa.length === requestListLength){
+                console.log(aaa,'请求完啦')
+              }
+              currentTaskNum--;
+              requestPool();
+            });
+        }
+        requestPool();
+      }
+    };
+    requestPool();
+  </script>
+</html>

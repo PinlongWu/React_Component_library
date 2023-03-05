@@ -2,3 +2,5 @@
 /node_modules
 
 /setup/node_modules
+
+/server/01_bigFileUpdata/node_modules
