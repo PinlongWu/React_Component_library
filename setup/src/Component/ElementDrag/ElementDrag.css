@@ -1,0 +1,21 @@
+
+/* .container {
+  position: absolute;
+} */
+
+.container div {
+    /* padding: 0 1.15rem;
+    flex-flow: row; */
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .container div div {
+    /* width: 100px;
+    height: 24px;
+    user-select: none;
+    outline: none;
+    box-sizing: border-box;
+    margin: 0;
+    background: transparent; */
+  }
