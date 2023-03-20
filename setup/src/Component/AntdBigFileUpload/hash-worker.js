@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 const hashWorker = () => {
-  self.importScripts("http://localhost:3000/spark-md5.min.js");
+  self.importScripts("https://cdn.bootcdn.net/ajax/libs/spark-md5/3.0.2/spark-md5.min.js");
   self.onmessage = (e) => {
     const { chunkList } = e.data; //切片数据
     const spark = new self.SparkMD5.ArrayBuffer();
