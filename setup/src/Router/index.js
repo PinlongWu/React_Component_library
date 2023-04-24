@@ -8,6 +8,7 @@ import EmTest from '../Component/EmTest'
 import TreeSelectTest from '../Component/TreeSelectTest'
 import BigFileUpload from '../Component/BigFileUpload'
 import AntdBigFileUpload from '../Component/AntdBigFileUpload'
+import AntdBigFileUploadArrange from '../Component/AntdBigFileUploadArrange'
 
 export default function index() {
   return (
@@ -20,6 +21,7 @@ export default function index() {
         <Route path="/treeSelectTest" element={<TreeSelectTest/>} />
         <Route path="/bigFileUpload" element={<BigFileUpload/>} />
         <Route path="/antdBigFileUpload" element={<AntdBigFileUpload/>} />
+        <Route path="/antdBigFileUploadArrange" element={<AntdBigFileUploadArrange/>} />
       </Routes>
     </Router>
   )
