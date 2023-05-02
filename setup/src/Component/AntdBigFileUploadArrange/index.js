@@ -46,12 +46,12 @@ export default class index extends Component {
       fileList: [],
     };
 
-    this.removeFileFlag = false;
-    this.waitIndex = -1;
+    this.removeFileFlag = false; // 删除开关
+    this.waitIndex = -1; // 当前需要处理的index
     this.maxFileLen = 0; // 上传的length
-    this.CHUNK_NUM_SIZE = 2;
+    this.CHUNK_NUM_SIZE = 2; // 切片大小限制
     this.CHUNK_SIZE = this.CHUNK_NUM_SIZE * 1024 * 1024; // 2M
-    this.MAX_REQUEST_NUM = 6;
+    this.MAX_REQUEST_NUM = 6; //最大上传并发数
   }
 
   // 获取文件后缀名
@@ -78,9 +78,12 @@ export default class index extends Component {
       const woker = new WorkerBuilder(hashWorker);
       woker.postMessage({ chunkList: chunkList });
       woker.onmessage = (e) => {
+        //删除开发触发停止操作
         if (this.removeFileFlag) {
           this.removeFileFlag = false;
+          // 关闭hash处理
           woker.terminate();
+          // 继续触发下一个文件上传
           this.handleUploadAvatar();
         }
         const { hash } = e.data;
@@ -111,6 +114,7 @@ export default class index extends Component {
     let { fileList } = this.state;
     const findIndex = R.findIndex((item) => item.uid === uid, fileList || []);
     fileList = this.updataFileState(fileList, { state: "wait" }, findIndex);
+    // 继续触发下一个文件上传
     this.setState({ fileList }, () => {
       this.handleUploadAvatar();
     });
@@ -198,6 +202,7 @@ export default class index extends Component {
           percentage: 0,
           uploadedSize: fileList[this.waitIndex]?.fileTotalSize,
         });
+        // 继续触发下一个文件上传
         this.setState({ fileList }, () => {
           this.handleUploadAvatar();
         });
@@ -210,6 +215,7 @@ export default class index extends Component {
           uploadedSize: 0,
         });
         console.error(e);
+        // 继续触发下一个文件上传
         this.setState({ fileList }, () => {
           this.handleUploadAvatar();
         });
@@ -239,10 +245,12 @@ export default class index extends Component {
 
       // 请求池
       const requestPool = () => {
+        //删除开发触发停止操作
         if (this.removeFileFlag) {
           hasError = true;
           progress = 0;
           this.removeFileFlag = false;
+          // 继续触发下一个文件上传
           this.handleUploadAvatar();
           return;
         }
@@ -271,6 +279,7 @@ export default class index extends Component {
                 } else {
                   progress += 100 / formDataListLength;
                   let { fileList } = this.state;
+                  // 处理进度条数据和已上传文件大小
                   fileList = this.updataFileState(fileList, {
                     percentage: progress,
                     uploadedSize:
@@ -292,6 +301,7 @@ export default class index extends Component {
                   percentage: 0,
                   uploadedSize: 0,
                 });
+                // 继续触发下一个文件上传
                 this.setState({ fileList }, () => {
                   this.handleUploadAvatar();
                 });
@@ -304,6 +314,7 @@ export default class index extends Component {
     });
   };
 
+  // 单个文件上传处理
   handleUpdate = async (fileInfo) => {
     const { fileData: file } = fileInfo;
     if (!file) return;
@@ -319,12 +330,15 @@ export default class index extends Component {
       this.getFileSuffix(file.name)
     );
 
+    //删除开发触发停止操作
     if (this.removeFileFlag) {
       this.removeFileFlag = false;
+      // 继续触发下一个文件上传
       this.handleUploadAvatar();
       return;
     }
 
+    // 说明当前文件已经完整的上传过
     if (!shouldUpload) {
       let { fileList } = this.state;
       fileList = this.updataFileState(fileList, {
@@ -332,6 +346,7 @@ export default class index extends Component {
         percentage: 0,
         uploadedSize: 0,
       });
+      // 继续触发下一个文件上传
       this.setState({ fileList }, () => {
         this.handleUploadAvatar();
       });
@@ -339,11 +354,13 @@ export default class index extends Component {
       return;
     }
 
+    // 处理以已上传过的切片，获取已上传文件大小
     const uploadFileSize = uploadedChunkList.length * this.CHUNK_NUM_SIZE;
-    // 文件大小减去以上传的文件大小
     if (uploadFileSize > 0) {
+      // 有已上传的切片
       let { fileList } = this.state;
       let fileTotalSize = fileList[this.waitIndex]?.fileTotalSize;
+      // 当前文件大小 - 已上传文件大小
       fileTotalSize =
         uploadFileSize >= fileTotalSize
           ? fileTotalSize
@@ -359,27 +376,32 @@ export default class index extends Component {
     }
   };
 
+  // antd 自定义Upload事件
   handleUploadAvatar = async (option) => {
+    // 只要触发upload，默认删除开关 false
     this.removeFileFlag = false;
+    // 获取有file内容的上传列表
     let { fileList } = this.state;
     fileList = R.filter((item) => item.fileData, fileList);
     this.setState({ fileList }, () => {
       let { fileList } = this.state;
+      // 因为上传是一次一次触发的，设置一个开关进行触发 (只有this.maxFileLen 等于 上传的列表数量才能触发)
       if (option) this.maxFileLen += 1;
       if (this.maxFileLen === fileList.length) {
-        // 有没有进行中或者解析中
+        // 有没有进行中或者解析中（有就不触发upload，进入等待）
         const progressItem = R.find(
           (item) => item.state === "progress" || item.state === "analysis",
           fileList || []
         );
         if (progressItem) return;
-        // 有没有等待的
+        // 有没有等待的 （没有等待说明没有需要上传的）
         const waitIndex = R.findIndex(
           (item) => item.state === "wait",
           fileList || []
         );
         if (waitIndex === -1) return;
 
+        // 进入需要上传程序
         this.waitIndex = waitIndex;
         fileList = this.updataFileState(fileList, {
           state: "analysis",
