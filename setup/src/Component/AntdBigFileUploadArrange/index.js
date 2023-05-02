@@ -169,6 +169,14 @@ export default class index extends Component {
         );
       });
 
+    //删除开发触发停止操作
+    if (this.removeFileFlag) {
+      this.removeFileFlag = false;
+      // 继续触发下一个文件上传
+      this.handleUploadAvatar();
+      return;
+    }
+
     // 开始上传分片
     this.uploadChunks(chunksData, hash, file.name);
   };
