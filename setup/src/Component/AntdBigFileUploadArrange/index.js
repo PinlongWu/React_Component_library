@@ -54,6 +54,10 @@ export default class index extends Component {
     this.MAX_REQUEST_NUM = 6; //最大上传并发数
   }
 
+  sleep = (ms) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+
   // 获取文件后缀名
   getFileSuffix = (fileName) => {
     let arr = fileName.split(".");
@@ -253,16 +257,6 @@ export default class index extends Component {
 
       // 请求池
       const requestPool = () => {
-        //删除开发触发停止操作
-        if (this.removeFileFlag) {
-          hasError = true;
-          progress = 0;
-          this.removeFileFlag = false;
-          // 继续触发下一个文件上传
-          this.handleUploadAvatar();
-          return;
-        }
-
         if (
           currentTaskNum < this.MAX_REQUEST_NUM &&
           formDataList.length &&
@@ -281,10 +275,41 @@ export default class index extends Component {
                   Promise.all(dataList).then(() => {
                     // 延迟发送合并请求，方便观察服务器合并文件的步骤
                     setTimeout(() => {
-                      this.mergeRequest(hash, fileName);
+                      // this.mergeRequest(hash, fileName);
+                      //删除开发触发停止操作
+                      if (this.removeFileFlag) {
+                        this.removeFileFlag = false;
+                        // 继续触发下一个文件上传
+                        this.handleUploadAvatar();
+                        return;
+                      }
+                      let { fileList } = this.state;
+                      fileList = this.updataFileState(fileList, {
+                        state: "success",
+                        percentage: 0,
+                        uploadedSize: fileList[this.waitIndex]?.fileTotalSize,
+                      });
+                      // 继续触发下一个文件上传
+                      this.setState({ fileList }, () => {
+                        this.handleUploadAvatar();
+                      });
                     }, 1000);
                   });
                 } else {
+                  currentTaskNum--;
+                  //删除开发触发停止操作
+                  if (this.removeFileFlag) {
+                    hasError = true;
+                    progress = 0;
+                    if (currentTaskNum === 0) {
+                      this.removeFileFlag = false;
+                      // 继续触发下一个文件上传
+                      this.handleUploadAvatar();
+                      return;
+                    }
+                  }
+                  if (hasError) return;
+
                   progress += 100 / formDataListLength;
                   let { fileList } = this.state;
                   // 处理进度条数据和已上传文件大小
@@ -294,8 +319,8 @@ export default class index extends Component {
                       fileList[this.waitIndex]?.uploadedSize +
                       this.CHUNK_NUM_SIZE,
                   });
-                  this.setState({ fileList }, () => {
-                    currentTaskNum--;
+                  this.setState({ fileList }, async () => {
+                    await this.sleep(1000);
                     requestPool();
                   });
                 }
