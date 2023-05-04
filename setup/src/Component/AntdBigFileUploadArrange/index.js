@@ -275,24 +275,25 @@ export default class index extends Component {
                   Promise.all(dataList).then(() => {
                     // 延迟发送合并请求，方便观察服务器合并文件的步骤
                     setTimeout(() => {
-                      // this.mergeRequest(hash, fileName);
+                      this.mergeRequest(hash, fileName);
+                      
                       //删除开发触发停止操作
-                      if (this.removeFileFlag) {
-                        this.removeFileFlag = false;
-                        // 继续触发下一个文件上传
-                        this.handleUploadAvatar();
-                        return;
-                      }
-                      let { fileList } = this.state;
-                      fileList = this.updataFileState(fileList, {
-                        state: "success",
-                        percentage: 0,
-                        uploadedSize: fileList[this.waitIndex]?.fileTotalSize,
-                      });
-                      // 继续触发下一个文件上传
-                      this.setState({ fileList }, () => {
-                        this.handleUploadAvatar();
-                      });
+                      // if (this.removeFileFlag) {
+                      //   this.removeFileFlag = false;
+                      //   // 继续触发下一个文件上传
+                      //   this.handleUploadAvatar();
+                      //   return;
+                      // }
+                      // let { fileList } = this.state;
+                      // fileList = this.updataFileState(fileList, {
+                      //   state: "success",
+                      //   percentage: 0,
+                      //   uploadedSize: fileList[this.waitIndex]?.fileTotalSize,
+                      // });
+                      // // 继续触发下一个文件上传
+                      // this.setState({ fileList }, () => {
+                      //   this.handleUploadAvatar();
+                      // });
                     }, 1000);
                   });
                 } else {

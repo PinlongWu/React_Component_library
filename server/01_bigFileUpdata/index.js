@@ -42,13 +42,11 @@ app.post("/verFileIsExist", jsonParser, async (req, res) => {
     });
     return;
   }
-  setTimeout(() => {
-    res.send({
-      code: 200,
-      shouldUpload: true,
-      uploadedChunkList: [],
-    });
-  }, 2000);
+  res.send({
+    code: 200,
+    shouldUpload: true,
+    uploadedChunkList: [],
+  });
 });
 
 app.post("/upload", async (req, res) => {
@@ -65,9 +63,7 @@ app.post("/upload", async (req, res) => {
     }
     await fse.move(chunk.path, chunksDir + "/" + hash);
   });
-  setTimeout(() => {
-    res.status(200).send("received file chunk");
-  }, Math.floor(Math.random() * (2001 - 1000)) + 1000);
+  res.status(200).send("received file chunk");
 });
 
 const pipeStream = (path, writeStream) =>
