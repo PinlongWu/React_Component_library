@@ -84,7 +84,6 @@ export default class index extends Component {
       woker.onmessage = (e) => {
         //删除开发触发停止操作
         if (this.removeFileFlag) {
-          this.removeFileFlag = false;
           // 关闭hash处理
           woker.terminate();
           // 继续触发下一个文件上传
@@ -175,7 +174,6 @@ export default class index extends Component {
 
     //删除开发触发停止操作
     if (this.removeFileFlag) {
-      this.removeFileFlag = false;
       // 继续触发下一个文件上传
       this.handleUploadAvatar();
       return;
@@ -279,7 +277,6 @@ export default class index extends Component {
                       
                       //删除开发触发停止操作
                       // if (this.removeFileFlag) {
-                      //   this.removeFileFlag = false;
                       //   // 继续触发下一个文件上传
                       //   this.handleUploadAvatar();
                       //   return;
@@ -303,7 +300,6 @@ export default class index extends Component {
                     hasError = true;
                     progress = 0;
                     if (currentTaskNum === 0) {
-                      this.removeFileFlag = false;
                       // 继续触发下一个文件上传
                       this.handleUploadAvatar();
                       return;
@@ -366,7 +362,6 @@ export default class index extends Component {
 
     //删除开发触发停止操作
     if (this.removeFileFlag) {
-      this.removeFileFlag = false;
       // 继续触发下一个文件上传
       this.handleUploadAvatar();
       return;
