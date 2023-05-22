@@ -5,6 +5,7 @@ const multiparty = require("multiparty"); // 中间件，处理FormData对象的
 const bodyParser = require("body-parser");
 
 let app = express();
+let errFlag = 0;
 const UPLOAD_FILES_DIR = path.resolve(__dirname, ".", "filelist"); // 读取根目录，创建一个文件夹qiepian存放切片
 // 配置请求参数解析器
 const jsonParser = bodyParser.json({ extended: false });
@@ -24,6 +25,7 @@ const getUploadedChunkList = async (fileHash) => {
 };
 
 app.post("/verFileIsExist", jsonParser, async (req, res) => {
+  errFlag = 0
   const { fileHash, suffix } = req.body;
   const filePath = path.resolve(UPLOAD_FILES_DIR, fileHash + "." + suffix);
   if (fse.existsSync(filePath)) {
@@ -52,6 +54,7 @@ app.post("/verFileIsExist", jsonParser, async (req, res) => {
 });
 
 app.post("/upload", async (req, res) => {
+  errFlag += 1;
   const multipart = new multiparty.Form();
   multipart.parse(req, async (err, fields, files) => {
     if (err) return;
@@ -65,9 +68,11 @@ app.post("/upload", async (req, res) => {
     }
     await fse.move(chunk.path, chunksDir + "/" + hash);
   });
-  setTimeout(() => {
+  if (errFlag === 5) {
+    res.status(500).send("received file chunk");
+  } else {
     res.status(200).send("received file chunk");
-  }, Math.floor(Math.random() * (2000 - 1000)) + 1000);
+  }
 });
 
 const pipeStream = (path, writeStream) =>

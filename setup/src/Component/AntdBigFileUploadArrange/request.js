@@ -1,5 +1,5 @@
 const request = ({ url, method = "post", data, headers = {} }) => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url);
     Object.keys(headers).forEach((key) =>
@@ -7,9 +7,13 @@ const request = ({ url, method = "post", data, headers = {} }) => {
     );
     xhr.send(data);
     xhr.onload = (e) => {
-      resolve({
-        data: e.target.response,
-      });
+      if (e.target.status !== 200) {
+        reject({ data: e.target.response, status: e.target.status });
+      } else {
+        resolve({
+          data: e.target.response,
+        });
+      }
     };
   });
 };

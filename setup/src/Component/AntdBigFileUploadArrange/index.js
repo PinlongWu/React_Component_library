@@ -274,7 +274,7 @@ export default class index extends Component {
                     // 延迟发送合并请求，方便观察服务器合并文件的步骤
                     setTimeout(() => {
                       this.mergeRequest(hash, fileName);
-                      
+
                       //删除开发触发停止操作
                       // if (this.removeFileFlag) {
                       //   // 继续触发下一个文件上传
@@ -305,7 +305,21 @@ export default class index extends Component {
                       return;
                     }
                   }
-                  if (hasError) return;
+                  if (hasError) {
+                    if (currentTaskNum === 0) {
+                      let { fileList } = this.state;
+                      fileList = this.updataFileState(fileList, {
+                        state: "error",
+                        percentage: 0,
+                        uploadedSize: 0,
+                      });
+                      // 继续触发下一个文件上传
+                      this.setState({ fileList }, () => {
+                        this.handleUploadAvatar();
+                      });
+                    }
+                    return;
+                  }
 
                   progress += 100 / formDataListLength;
                   let { fileList } = this.state;
@@ -323,18 +337,21 @@ export default class index extends Component {
                 }
               })
               .catch((e) => {
+                currentTaskNum--;
                 console.error(e);
                 hasError = true;
-                let { fileList } = this.state;
-                fileList = this.updataFileState(fileList, {
-                  state: "error",
-                  percentage: 0,
-                  uploadedSize: 0,
-                });
-                // 继续触发下一个文件上传
-                this.setState({ fileList }, () => {
-                  this.handleUploadAvatar();
-                });
+                if (currentTaskNum === 0) {
+                  let { fileList } = this.state;
+                  fileList = this.updataFileState(fileList, {
+                    state: "error",
+                    percentage: 0,
+                    uploadedSize: 0,
+                  });
+                  // 继续触发下一个文件上传
+                  this.setState({ fileList }, () => {
+                    this.handleUploadAvatar();
+                  });
+                }
               });
           }
           requestPool();
