@@ -9,6 +9,7 @@ import TreeSelectTest from '../Component/TreeSelectTest'
 import BigFileUpload from '../Component/BigFileUpload'
 import AntdBigFileUpload from '../Component/AntdBigFileUpload'
 import AntdBigFileUploadArrange from '../Component/AntdBigFileUploadArrange'
+import AntdBigFileUploadCSV from '../Component/AntdBigFileUploadCSV'
 
 export default function index() {
   return (
@@ -22,6 +23,7 @@ export default function index() {
         <Route path="/bigFileUpload" element={<BigFileUpload/>} />
         <Route path="/antdBigFileUpload" element={<AntdBigFileUpload/>} />
         <Route path="/antdBigFileUploadArrange" element={<AntdBigFileUploadArrange/>} />
+        <Route path="/AntdBigFileUploadCSV" element={<AntdBigFileUploadCSV/>} />
       </Routes>
     </Router>
   )
