@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import * as R from "ramda";
 import update from "immutability-helper";
+import Papa from "papaparse";
 import { message, Progress, Upload } from "antd";
 import {
   CheckCircleOutlined,
@@ -98,6 +99,65 @@ export default class index extends Component {
     });
   };
 
+  arrayToCsv = (data, args = {}) => {
+    let columnDelimiter = args.columnDelimiter || ",";
+    let lineDelimiter = args.lineDelimiter || "\n";
+
+    return data.reduce((csv, row) => {
+      const rowContent = Array.isArray(R.values(row))
+        ? R.values(row).reduce((rowTemp, col) => {
+            let ret = rowTemp ? rowTemp + columnDelimiter : rowTemp;
+            if (col) {
+              let formatedCol = col
+                .toString()
+                .replace(new RegExp(lineDelimiter, "g"), " ");
+              ret += /,/.test(formatedCol) ? `"${formatedCol}"` : formatedCol;
+            }
+            return ret;
+          }, "")
+        : R.values(row);
+      return (csv ? csv + lineDelimiter : "") + rowContent;
+    }, "");
+  };
+
+  getCSVData = (file) => {
+    let chunkList = [];
+    let hander = [];
+    return new Promise((resolve) => {
+      Papa.parse(file, {
+        header: true,
+        worker: true,
+        dynamicTyping: true, //数字和布尔数据将被转换为它们的类型，而不是剩余的字符串。
+        chunkSize: this.CHUNK_SIZE,
+        chunk: (results, parser) => {
+          const { data, meta } = results;
+          hander = String(meta.fields || '')
+          chunkList = [
+            ...chunkList,
+            { chunk: new Blob([this.arrayToCsv(data)]) },
+          ];
+        },
+        complete: (results, file) => {
+          resolve({ dataChunkList: chunkList, hander });
+        },
+        error: (err) => {
+          let { fileList } = this.state;
+          fileList = this.updataFileState(fileList, {
+            state: "error",
+            percentage: 0,
+            uploadedSize: 0,
+          });
+          // 继续触发下一个文件上传
+          this.setState({ fileList }, () => {
+            this.handleUploadAvatar();
+          });
+          message.error(`${file.name} ${String(err)}`);
+          return;
+        },
+      });
+    });
+  };
+
   // 修改文件状态
   updataFileState = (fileList, restObj, waitIndex) => {
     waitIndex = R.isNil(waitIndex) ? this.waitIndex : waitIndex;
@@ -148,7 +208,7 @@ export default class index extends Component {
   };
 
   // 过滤切片
-  filterChunk = (uploadedChunkList, chunkList, hash, file) => {
+  filterChunk = (uploadedChunkList, chunkList, hash, file, csvHander) => {
     // 已上传的切片
     let uploadedChunkIndexList = [];
     if (uploadedChunkList && uploadedChunkList.length > 0) {
@@ -180,7 +240,7 @@ export default class index extends Component {
     }
 
     // 开始上传分片
-    this.uploadChunks(chunksData, hash, file.name);
+    this.uploadChunks(chunksData, hash, file.name, csvHander);
   };
 
   // 秒传：验证文件是否存在服务器
@@ -233,12 +293,15 @@ export default class index extends Component {
   };
 
   // 上传分片
-  uploadChunks = (chunksData, hash, fileName) => {
+  uploadChunks = (chunksData, hash, fileName, csvHander) => {
     // 创建数据流列表
     const formDataList = chunksData.map(({ chunk, hash }) => {
       const formData = new FormData();
       formData.append("chunk", chunk);
       formData.append("hash", hash);
+      if(csvHander){
+        formData.append("csvHander", csvHander);
+      }
       formData.append("suffix", this.getFileSuffix(fileName));
       return { formData };
     });
@@ -366,8 +429,17 @@ export default class index extends Component {
     const { fileData: file } = fileInfo;
     if (!file) return;
 
-    // 保存文件名, 文件分片
-    const chunkList = this.splitFile(file);
+    let chunkList = [];
+    let csvHander = ''
+    if (file.type === "text/csv") {
+      const { dataChunkList, hander } = await this.getCSVData(file);
+      csvHander = hander
+      chunkList = dataChunkList
+    } else {
+      // 保存文件名, 文件分片
+      chunkList = this.splitFile(file);
+    }
+
     // 计算文件hash
     const hash = await this.calculateHash(chunkList);
 
@@ -415,10 +487,10 @@ export default class index extends Component {
         fileTotalSize: fileTotalSize,
       });
       this.setState({ fileList }, () => {
-        this.filterChunk(uploadedChunkList, chunkList, hash, file);
+        this.filterChunk(uploadedChunkList, chunkList, hash, file, csvHander);
       });
     } else {
-      this.filterChunk(uploadedChunkList, chunkList, hash, file);
+      this.filterChunk(uploadedChunkList, chunkList, hash, file, csvHander);
     }
   };
 
