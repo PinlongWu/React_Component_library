@@ -12,3 +12,9 @@
 .no-border-right {
   border-right: none;
 }
+
+span[style='color:#12C194']{
+  color: red !important;
+  padding: 0 4px;
+  background-color: yellow;
+}
