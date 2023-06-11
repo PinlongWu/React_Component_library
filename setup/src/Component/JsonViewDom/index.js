@@ -1,6 +1,7 @@
 import { Switch } from "antd";
 import React, { useState } from "react";
-import ReactJson from "react-json-view-repair";
+// import ReactJson from "react-json-view-repair";
+import ReactJson from "searchable-react-json-view";
 
 export default function Index() {
   const [jsonData] = useState({
@@ -25,7 +26,8 @@ export default function Index() {
         enableClipboard={false}
         displayDataTypes={false}
         src={jsonData}
-        keyWord="wpl"
+        highlightSearch="Wp"
+        // highlightSearchColor
       />
     </>
   );
