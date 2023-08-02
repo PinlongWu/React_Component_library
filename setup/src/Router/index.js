@@ -12,6 +12,7 @@ import AntdBigFileUploadArrange from '../Component/AntdBigFileUploadArrange'
 import AntdBigFileUploadCSV from '../Component/AntdBigFileUploadCSV'
 import JsonViewDom from '../Component/JsonViewDom'
 import Websocket from '../Component/Websocket/Index'
+import Masonry from '../Component/Masonry'
 
 export default function index() {
   return (
@@ -25,8 +26,10 @@ export default function index() {
         <Route path="/bigFileUpload" element={<BigFileUpload/>} />
         <Route path="/antdBigFileUpload" element={<AntdBigFileUpload/>} />
         <Route path="/antdBigFileUploadArrange" element={<AntdBigFileUploadArrange/>} />
+        <Route path="/antdBigFileUploadCSV" element={<AntdBigFileUploadCSV/>} />
         <Route path="/jsonViewDom" element={<JsonViewDom/>} />
         <Route path="/websocket" element={<Websocket/>} />
+        <Route path="/masonry" element={<Masonry/>} />
       </Routes>
     </Router>
   )

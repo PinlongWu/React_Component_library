@@ -13,9 +13,10 @@ export default function Home() {
       <Button type="primary" onClick={()=>navigate('/bigFileUpload')}>大文件切片上传</Button>
       <Button type="primary" onClick={()=>navigate('/antdBigFileUpload')}>Antd大文件切片上传</Button>
       <Button type="primary" onClick={()=>navigate('/antdBigFileUploadArrange')}>Antd大文件切片排列上传</Button>
-      <Button type="primary" onClick={()=>navigate('/AntdBigFileUploadCSV')}>Antd-CSV大文件切片排列上传</Button>
+      <Button type="primary" onClick={()=>navigate('/antdBigFileUploadCSV')}>Antd-CSV大文件切片排列上传</Button>
       <Button type="primary" onClick={()=>navigate('/jsonViewDom')}>Json-View-Dom</Button>
       <Button type="primary" onClick={()=>navigate('/websocket')}>Websocket</Button>
+      <Button type="primary" onClick={()=>navigate('/masonry')}>Masonry 瀑布流</Button>
     </div>
   );
 }
