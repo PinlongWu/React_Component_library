@@ -13,6 +13,7 @@ import AntdBigFileUploadCSV from '../Component/AntdBigFileUploadCSV'
 import JsonViewDom from '../Component/JsonViewDom'
 import Websocket from '../Component/Websocket/Index'
 import Masonry from '../Component/Masonry'
+import Reactflow from '../Component/Reactflow'
 
 export default function index() {
   return (
@@ -30,6 +31,7 @@ export default function index() {
         <Route path="/jsonViewDom" element={<JsonViewDom/>} />
         <Route path="/websocket" element={<Websocket/>} />
         <Route path="/masonry" element={<Masonry/>} />
+        <Route path="/reactflow" element={<Reactflow/>} />
       </Routes>
     </Router>
   )

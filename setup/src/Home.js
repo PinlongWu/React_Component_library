@@ -17,6 +17,7 @@ export default function Home() {
       <Button type="primary" onClick={()=>navigate('/jsonViewDom')}>Json-View-Dom</Button>
       <Button type="primary" onClick={()=>navigate('/websocket')}>Websocket</Button>
       <Button type="primary" onClick={()=>navigate('/masonry')}>Masonry 瀑布流</Button>
+      <Button type="primary" onClick={()=>navigate('/reactflow')}>Reactflow 关系图</Button>
     </div>
   );
 }
