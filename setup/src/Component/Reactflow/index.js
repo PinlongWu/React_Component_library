@@ -73,53 +73,34 @@ export default function Reactflow() {
   };
 
   // 获取每个节点的等级, 以及等级下有哪些节点, 以及当前节点有哪些下一级节点，以及整体哪些整体流程
-  const getNodes = (item, _item, _index, mergeNodesLevel) => {
-    const { data, alreadyExists } = mergeNodesLevel;
+  const getNodes = (item, _item, _index, mergeNodes) => {
+    const { data, alreadyExists } = mergeNodes;
+    const { children, ...rest } = item;
     const level = _index + 1;
+    const own = _item;
+    const nextNode = children[_index + 1] || rest;
+    const id = own.name;
 
-    const { children } = item;
-    const { name } = _item;
-    const nextNode = children[_index + 1];
-    const nextNodesFlagData = nextNode ? [nextNode] : [];
-    const nextAlreadyExistsFlagData = nextNode ? [nextNode.name] : [];
-
-    if (!R.has(level, data)) {
-      data[level] = {};
-      data[level][name] = {
-        own: _item,
-        nextNodes: nextNodesFlagData,
-        nextAlreadyExists: [...nextAlreadyExistsFlagData],
-        overallProcess: [item],
+    if (!R.includes(id, alreadyExists)) {
+      data[id] = {
+        id,
+        data: {
+          label: id,
+          level,
+          own: _item,
+          overallProcess: [item],
+          nextNodes: [nextNode],
+          nextAlreadyExists: [nextNode.name],
+        },
       };
     } else {
-      if (!R.includes(name, alreadyExists)) {
-        data[level][name] = {
-          own: _item,
-          nextNodes: nextNodesFlagData,
-          nextAlreadyExists: [...nextAlreadyExistsFlagData],
-          overallProcess: [item],
-        };
-      } else {
-        if (
-          nextNode &&
-          !R.includes(nextNode.name, data[level][name].nextAlreadyExists)
-        ) {
-          data[level][name].nextNodes = [
-            ...data[level][name].nextNodes,
-            ...nextNodesFlagData,
-          ];
-          data[level][name].nextAlreadyExists = [
-            ...data[level][name].nextAlreadyExists,
-            ...nextAlreadyExistsFlagData,
-          ];
-        }
-        data[level][name].overallProcess = [
-          ...data[level][name].overallProcess,
-          item,
-        ];
+      data[id].data.overallProcess = [...data[id].data.overallProcess, item];
+      if (!R.includes(nextNode.name, data[id].data.nextAlreadyExists)) {
+        data[id].data.nextNodes = [...data[id].data.nextNodes, nextNode];
+        data[id].data.nextAlreadyExists = [...data[id].data.nextAlreadyExists, nextNode.name];
       }
     }
-    alreadyExists.push(name);
+    alreadyExists.push(id);
   };
 
   // 处理 edges
@@ -142,7 +123,6 @@ export default function Reactflow() {
     } else {
       data[id].data.overallProcess = [...data[id].data.overallProcess, item];
     }
-
     alreadyExists.push(id);
   };
 
@@ -155,31 +135,20 @@ export default function Reactflow() {
 
     let nodes = [];
     let edges = [];
-    let mergeNodesLevel = { data: {}, alreadyExists: [] }; // alreadyExists表示以及出现的数据
+    let mergeNodes = { data: {}, alreadyExists: [] }; // alreadyExists表示以及出现的数据
     let mergeReges = { data: {}, alreadyExists: [] }; // alreadyExists表示以及出现的数据
     R.forEach((item) => {
       const { children } = item;
       R.addIndex(R.forEach)((_item, _index) => {
-        getNodes(item, _item, _index, mergeNodesLevel);
+        getNodes(item, _item, _index, mergeNodes);
         getEdges(item, _item, _index, mergeReges);
       }, children || []);
     }, data || []);
-    mergeNodesLevel = mergeNodesLevel.data;
 
-    R.forEachObjIndexed((item, index) => {
-      R.forEach((_item) => {
-        const { own } = _item;
-        const { name } = own;
-        nodes.push({
-          id: name,
-          data: { label: name, ..._item },
-        });
-      }, R.values(item || {}));
-    }, mergeNodesLevel || []);
-    nodes = [...nodes, lastTargetNode];
+    nodes = [...R.values(mergeNodes.data || {}), lastTargetNode];
     edges = R.values(mergeReges.data || {});
 
-    console.log(nodes, edges, mergeNodesLevel, "nodes, edges, mergeNodesLevel");
+    console.log(nodes, edges, mergeNodes, "nodes, edges, mergeNodes");
     return { nodes, edges };
   };
 
