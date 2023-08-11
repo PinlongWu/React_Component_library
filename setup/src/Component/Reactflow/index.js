@@ -94,7 +94,13 @@ export default function Reactflow() {
         },
       };
     } else {
-      data[id].data.overallProcess = [...data[id].data.overallProcess, item];
+      const findOverallProcess = R.find(
+        (__item) => __item.overallProcessId === item.overallProcessId,
+        data[id].data.overallProcess
+      );
+      if (!findOverallProcess) {
+        data[id].data.overallProcess = [...data[id].data.overallProcess, item];
+      }
       if (!R.includes(nextNode.name, data[id].data.nextAlreadyExists)) {
         data[id].data.nextNodes = [...data[id].data.nextNodes, nextNode];
         data[id].data.nextAlreadyExists = [...data[id].data.nextAlreadyExists, nextNode.name];
@@ -121,12 +127,27 @@ export default function Reactflow() {
         markerEnd: { type: MarkerType.ArrowClosed },
       };
     } else {
-      data[id].data.overallProcess = [...data[id].data.overallProcess, item];
+      const findOverallProcess = R.find(
+        (__item) => __item.overallProcessId === item.overallProcessId,
+        data[id].data.overallProcess
+      );
+      if (!findOverallProcess) {
+        data[id].data.overallProcess = [...data[id].data.overallProcess, item];
+      }
     }
     alreadyExists.push(id);
   };
 
   const getNodesAndEdges = (data) => {
+    R.forEach((item) => {
+      const { children, name } = item;
+      let overallProcessId = name;
+      R.addIndex(R.forEach)((_item, _index) => {
+        overallProcessId += `-->${_item.name}`;
+      }, children || []);
+      item.overallProcessId = overallProcessId;
+    }, data || []);
+
     const { children, ...rest } = data[0] || {};
     const lastTargetNode = {
       id: rest.name,
