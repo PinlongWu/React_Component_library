@@ -33,6 +33,7 @@ const data = [
 const nodeWidth = 180;
 const nodeHeight = 40;
 const ranksep = 200;
+const reverse = true
 
 export default function Reactflow() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -113,8 +114,12 @@ export default function Reactflow() {
   const getEdges = (item, _item, _index, mergeReges) => {
     const { data, alreadyExists } = mergeReges;
     const { children, ...rest } = item;
-    const source = _item;
-    const target = children[_index + 1] || rest;
+    let source = _item;
+    let target = children[_index + 1] || rest;
+    if(reverse){
+      source = children[_index - 1] || rest;
+      target = _item
+    }
     const id = `${source.name}-${target.name}`;
 
     if (!R.includes(id, alreadyExists)) {
