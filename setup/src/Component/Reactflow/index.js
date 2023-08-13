@@ -79,7 +79,7 @@ export default function Reactflow() {
     const { children, ...rest } = item;
     const level = _index + 1;
     const own = _item;
-    const nextNode = children[_index + 1] || rest;
+    const nextNode = children[_index + 1] || (reverse ? undefined : rest);
     const id = own.name;
 
     if (!R.includes(id, alreadyExists)) {
@@ -90,8 +90,8 @@ export default function Reactflow() {
           level,
           own: _item,
           overallProcess: [item],
-          nextNodes: [nextNode],
-          nextAlreadyExists: [nextNode.name],
+          nextNodes: nextNode ? [nextNode] : [],
+          nextAlreadyExists: nextNode ? [nextNode.name] : [],
         },
       };
     } else {
@@ -102,7 +102,7 @@ export default function Reactflow() {
       if (!findOverallProcess) {
         data[id].data.overallProcess = [...data[id].data.overallProcess, item];
       }
-      if (!R.includes(nextNode.name, data[id].data.nextAlreadyExists)) {
+      if (nextNode && !R.includes(nextNode.name, data[id].data.nextAlreadyExists)) {
         data[id].data.nextNodes = [...data[id].data.nextNodes, nextNode];
         data[id].data.nextAlreadyExists = [...data[id].data.nextAlreadyExists, nextNode.name];
       }
