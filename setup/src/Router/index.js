@@ -14,6 +14,7 @@ import JsonViewDom from '../Component/JsonViewDom'
 import Websocket from '../Component/Websocket/Index'
 import Masonry from '../Component/Masonry'
 import Reactflow from '../Component/Reactflow'
+import Clipboard from '../Component/Clipboard';
 
 export default function index() {
   return (
@@ -32,6 +33,7 @@ export default function index() {
         <Route path="/websocket" element={<Websocket/>} />
         <Route path="/masonry" element={<Masonry/>} />
         <Route path="/reactflow" element={<Reactflow/>} />
+        <Route path="/clipboard" element={<Clipboard/>} />
       </Routes>
     </Router>
   )

@@ -18,6 +18,7 @@ export default function Home() {
       <Button type="primary" onClick={()=>navigate('/websocket')}>Websocket</Button>
       <Button type="primary" onClick={()=>navigate('/masonry')}>Masonry 瀑布流</Button>
       <Button type="primary" onClick={()=>navigate('/reactflow')}>Reactflow 关系图</Button>
+      <Button type="primary" onClick={()=>navigate('/clipboard')}>复制</Button>
     </div>
   );
 }
