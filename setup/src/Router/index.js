@@ -15,6 +15,7 @@ import Websocket from '../Component/Websocket/Index'
 import Masonry from '../Component/Masonry'
 import Reactflow from '../Component/Reactflow'
 import Clipboard from '../Component/Clipboard';
+import WorkFlow from '../Component/WorkFlow';
 
 export default function index() {
   return (
@@ -34,6 +35,7 @@ export default function index() {
         <Route path="/masonry" element={<Masonry/>} />
         <Route path="/reactflow" element={<Reactflow/>} />
         <Route path="/clipboard" element={<Clipboard/>} />
+        <Route path="/workFlow" element={<WorkFlow/>} />
       </Routes>
     </Router>
   )
