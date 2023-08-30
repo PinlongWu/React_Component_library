@@ -42,7 +42,7 @@ export default function WorkFlow() {
   }, []);
 
   return (
-    <div style={{ display: "flex", height: "100%", padding: 10 }}>
+    <div style={{ display: "flex", height: "100%", padding: 10, boxSizing: 'border-box' }}>
       <div
         ref={workFlowBoxRef}
         style={{

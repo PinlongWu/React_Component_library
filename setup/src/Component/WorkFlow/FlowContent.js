@@ -7,7 +7,9 @@ import {
   SaveOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
+
 import FlowGraphics from "./components/FlowGraphics";
+import EditInput from "./components/EditInput";
 
 export default function FlowContent() {
   const [state, setState] = useReducer(
@@ -53,39 +55,14 @@ export default function FlowContent() {
             overflow: "hidden",
           }}
         >
-          {editTitle ? (
-            <Input
-              autoFocus
-              size="small"
-              value={workFlowInfo.title}
-              onBlur={() => setState({ editTitle: false })}
-              onChange={({ target: { value } }) =>
-                setState({ workFlowInfo: { ...workFlowInfo, title: value } })
-              }
-              style={{
-                height: 38,
-                display: "flex",
-                alignItems: "center",
-                fontSize: 24,
-                fontWeight: "bold",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                cursor: "pointer",
-                fontSize: 24,
-                fontWeight: "bold",
-                wordBreak: "keep-all",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              onClick={() => setState({ editTitle: true })}
-            >
-              {workFlowInfo.title}
-            </div>
-          )}
+          <EditInput
+            workFlowInfo={workFlowInfo}
+            textStyle={{ fontSize: 24 }}
+            inputStyle={{ height: 38, fontSize: 24 }}
+            handleChange={(value) =>
+              setState({ workFlowInfo: { ...workFlowInfo, title: value } })
+            }
+          />
         </div>
 
         <div style={{ display: "flex", alignItems: "center" }}>
