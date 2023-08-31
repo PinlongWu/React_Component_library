@@ -29,7 +29,9 @@
     "reactflow": "^11.7.4",
     "searchable-react-json-view": "0.0.8",
     "styled-components": "^5.3.6",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "codemirror": "^5.62.3",
+    "react-codemirror2": "^7.2.1"
   },
   "scripts": {
     "start": "react-scripts start",

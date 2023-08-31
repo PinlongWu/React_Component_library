@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer } from "react";
+import React, { createContext, useMemo, useReducer } from "react";
 import * as R from "ramda";
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
@@ -8,14 +8,19 @@ import { rootSelectInfos, ordinarySelectInfos } from "./data";
 import CodeTypeHeader from "./components/CodeTypeHeader";
 import TypeList from "./components/TypeList";
 
+const CodeTypeListContext = createContext(null);
+const CodeTypeDispatchContext = createContext(null);
+
 export default function CodeTypeList({ isRoot = true }) {
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
     {
       searchVal: "",
+      activeTypeItem: null,
+      nodeData: { type: "Events", codeContent: "" },
     }
   );
-  const { searchVal } = state;
+  const { searchVal, activeTypeItem } = state;
 
   const typeList = useMemo(() => {
     const dataMap = isRoot ? rootSelectInfos() : ordinarySelectInfos();
@@ -34,39 +39,50 @@ export default function CodeTypeList({ isRoot = true }) {
   }, [isRoot, searchVal]);
 
   return (
-    <div style={{ padding: 8 }}>
-      {isRoot && (
-        <div>
-          <CodeTypeHeader
-            title="Select a trigger"
-            desc="Triggers start the execution of a workflow. They can listen for events or be scheduled to run at fixed times or intervals."
-          />
-          <Input
-            size="small"
-            placeholder="Search triggers"
-            prefix={<SearchOutlined />}
-            style={{ maxWidth: 400, marginBottom: 16 }}
-            onChange={({ target: { value } }) => setState({ searchVal: value })}
-          />
-          <TypeList typeList={typeList} />
+    <CodeTypeListContext.Provider value={state}>
+      <CodeTypeDispatchContext.Provider value={setState}>
+        <div style={{ padding: 8 }}>
+          {isRoot && !activeTypeItem && (
+            <div>
+              <CodeTypeHeader
+                title="Select a trigger"
+                desc="Triggers start the execution of a workflow. They can listen for events or be scheduled to run at fixed times or intervals."
+              />
+              <Input
+                size="small"
+                placeholder="Search triggers"
+                prefix={<SearchOutlined />}
+                style={{ maxWidth: 400, marginBottom: 16 }}
+                onChange={({ target: { value } }) =>
+                  setState({ searchVal: value })
+                }
+              />
+              <TypeList typeList={typeList} />
+            </div>
+          )}
+          {!isRoot && !activeTypeItem && (
+            <div>
+              <CodeTypeHeader
+                title="Choose action"
+                desc="Add a task to the workflow and select the action it performs."
+              />
+              <Input
+                size="small"
+                placeholder="Search actions"
+                prefix={<SearchOutlined />}
+                style={{ maxWidth: 400, marginBottom: 16 }}
+                onChange={({ target: { value } }) =>
+                  setState({ searchVal: value })
+                }
+              />
+              <TypeList typeList={typeList} />
+            </div>
+          )}
+          {activeTypeItem && activeTypeItem.component()}
         </div>
-      )}
-      {!isRoot && (
-        <div>
-          <CodeTypeHeader
-            title="Choose action"
-            desc="Add a task to the workflow and select the action it performs."
-          />
-          <Input
-            size="small"
-            placeholder="Search actions"
-            prefix={<SearchOutlined />}
-            style={{ maxWidth: 400, marginBottom: 16 }}
-            onChange={({ target: { value } }) => setState({ searchVal: value })}
-          />
-          <TypeList typeList={typeList} />
-        </div>
-      )}
-    </div>
+      </CodeTypeDispatchContext.Provider>
+    </CodeTypeListContext.Provider>
   );
 }
+
+export { CodeTypeListContext, CodeTypeDispatchContext };

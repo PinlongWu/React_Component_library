@@ -42,7 +42,14 @@ export default function WorkFlow() {
   }, []);
 
   return (
-    <div style={{ display: "flex", height: "100%", padding: 10, boxSizing: 'border-box' }}>
+    <div
+      style={{
+        display: "flex",
+        height: "100%",
+        padding: 10,
+        boxSizing: "border-box",
+      }}
+    >
       <div
         ref={workFlowBoxRef}
         style={{
@@ -77,6 +84,7 @@ export default function WorkFlow() {
           borderRadius: 10,
           border: "1px solid rgb(218, 220, 224)",
           padding: 16,
+          minWidth: 0,
         }}
       >
         <CodeTypeList />

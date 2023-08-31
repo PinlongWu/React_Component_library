@@ -15,11 +15,10 @@ export default function FlowContent() {
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
     {
-      editTitle: false,
       workFlowInfo: { title: "Untitled workflow" },
     }
   );
-  const { editTitle, workFlowInfo } = state;
+  const { workFlowInfo } = state;
 
   const menuList = useMemo(() => {
     return (

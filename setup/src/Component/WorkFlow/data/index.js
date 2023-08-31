@@ -4,6 +4,10 @@ import {
   FieldTimeOutlined,
 } from "@ant-design/icons";
 
+import EventTrigger from "../components/EventTrigger";
+import FixedTimeTrigger from "../components/FixedTimeTrigger";
+import TimeIntervalTrigger from "../components/TimeIntervalTrigger";
+
 export const rootSelectInfos = () => {
   return {
     event: {
@@ -14,7 +18,7 @@ export const rootSelectInfos = () => {
           title: "Event trigger",
           icon: <AlertOutlined />,
           desc: "Run workflow based on a custom event filter.",
-          component: () => {},
+          component: () => <EventTrigger />,
         },
       ],
     },
@@ -26,14 +30,14 @@ export const rootSelectInfos = () => {
           title: "Fixed time trigger",
           icon: <FieldTimeOutlined />,
           desc: "Run workflow at a fixed time of day.",
-          component: () => {},
+          component: () => <FixedTimeTrigger />,
         },
         {
           id: "timeIntervalTrigger",
           title: "Time interval trigger",
           icon: <FieldTimeOutlined />,
           desc: "Run workflow at fixed time intervals.",
-          component: () => {},
+          component: () => <TimeIntervalTrigger />,
         },
       ],
     },
