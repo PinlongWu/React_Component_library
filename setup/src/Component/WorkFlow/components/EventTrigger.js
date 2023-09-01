@@ -13,30 +13,34 @@ export default function EventTrigger() {
   return (
     <>
       <ActiveTriggerHeader />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          paddingTop: 8,
-          marginBottom: 16,
-        }}
-      >
-        <span style={{ fontSize: 12, marginBottom: 4 }}>Event type</span>
-        <Select
-          size="small"
-          value={nodeData.type}
-          onChange={(value) =>
-            contextSetState({ nodeData: { ...nodeData, type: value } })
-          }
-          options={[
-            { value: "Events", label: "Events" },
-            { value: "Metric", label: "Metric" },
-          ]}
-        />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", paddingTop: 8 }}>
-        <span style={{ fontSize: 12, marginBottom: 4 }}>Filter query</span>
-        <CodeMirrorEditor mode='sql'/>
+      <div style={{ flex: 1, overflowY: "scroll", paddingRight: 14 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            paddingTop: 8,
+            marginBottom: 16,
+          }}
+        >
+          <span style={{ fontSize: 12, marginBottom: 4 }}>Event type</span>
+          <Select
+            size="small"
+            value={nodeData.type}
+            onChange={(value) =>
+              contextSetState({ nodeData: { ...nodeData, type: value } })
+            }
+            options={[
+              { value: "Events", label: "Events" },
+              { value: "Metric", label: "Metric" },
+            ]}
+          />
+        </div>
+        <div
+          style={{ display: "flex", flexDirection: "column", paddingTop: 8 }}
+        >
+          <span style={{ fontSize: 12, marginBottom: 4 }}>Filter query</span>
+          <CodeMirrorEditor mode="sql" />
+        </div>
       </div>
     </>
   );

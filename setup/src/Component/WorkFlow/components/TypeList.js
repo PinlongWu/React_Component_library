@@ -7,7 +7,7 @@ export default function TypeList({ typeList }) {
   const contextSetState = useContext(CodeTypeDispatchContext);
 
   return (
-    <div style={{ userSelect: "none" }}>
+    <div style={{ userSelect: "none", flex: 1, overflowY: "scroll" }}>
       {R.addIndex(R.map)((typeInfo, typeIdx) => {
         const { title, dataList } = typeInfo;
         return (

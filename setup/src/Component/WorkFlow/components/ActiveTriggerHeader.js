@@ -11,7 +11,7 @@ export default function ActiveTriggerHeader() {
   );
   const { showChangeTriggerModal } = state;
   const contextState = useContext(CodeTypeListContext) || {};
-  const { activeTypeItem } = contextState;
+  const { activeTypeItem, localNodeData } = contextState;
   const contextSetState = useContext(CodeTypeDispatchContext) || {};
 
   return (
@@ -52,12 +52,12 @@ export default function ActiveTriggerHeader() {
       </div>
       {showChangeTriggerModal && (
         <Modal
-          open
+          visible
           title="Are you sure you want to change the trigger type?"
           okText="Change trigger"
           onOk={() => {
             setState({ showChangeTriggerModal: false });
-            contextSetState({ activeTypeItem: null });
+            contextSetState({ activeTypeItem: null, nodeData: localNodeData });
           }}
           onCancel={() => setState({ showChangeTriggerModal: false })}
         >

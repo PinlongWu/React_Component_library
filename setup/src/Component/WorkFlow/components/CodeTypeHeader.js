@@ -7,7 +7,6 @@ export default function CodeTypeHeader({ title, desc }) {
         style={{
           fontSize: 24,
           fontWeight: "bold",
-          lineHeight: 1,
           wordBreak: "keep-all",
           whiteSpace: "nowrap",
           overflow: "hidden",
