@@ -185,7 +185,7 @@ export default function FixedTimeTrigger() {
                       nodeData: {
                         ...nodeData,
                         endType: value,
-                        endTimeObj: moment.utc().endOf("days").valueOf(),
+                        endTime: moment.utc().endOf("days").valueOf(),
                         maxNum: 10,
                       },
                     })
@@ -240,7 +240,7 @@ export default function FixedTimeTrigger() {
                     style={{ width: "100%" }}
                     onChange={(value) =>
                       contextSetState({
-                        nodeData: { ...nodeData, maxNum: value },
+                        nodeData: { ...nodeData, maxNum: value || 0 },
                       })
                     }
                   />
