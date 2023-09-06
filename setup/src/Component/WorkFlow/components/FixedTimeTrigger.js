@@ -1,5 +1,4 @@
 import React, { useContext } from "react";
-import * as R from "ramda";
 import moment from "moment";
 import { Collapse, DatePicker, Divider, InputNumber, Select } from "antd";
 
@@ -9,45 +8,10 @@ import ActiveTriggerHeader from "./ActiveTriggerHeader";
 import TimeInput from "./TimeInput";
 import TimeAlter from "./TimeAlter";
 
-const timeNameOprion = R.map(
-  (item) => ({ label: item, value: item }),
-  moment.tz.names() || []
-);
-
-const ruleTimeTypeOption = [
-  { value: "Every day", label: "Every day" },
-  { value: "Every working day", label: "Every working day" },
-  {
-    value: "First working day of the month",
-    label: "First working day of the month",
-  },
-  {
-    value: "First working day of the week",
-    label: "First working day of the week",
-  },
-  {
-    value: "Last working day of the month",
-    label: "Last working day of the month",
-  },
-  {
-    value: "Last working day of the week",
-    label: "Last working day of the week",
-  },
-];
-
-const endType = [
-  { value: "Never", label: "Never" },
-  { value: "After a date", label: "After a date" },
-  {
-    value: "After number of runs",
-    label: "After number of runs",
-  },
-];
-
 export default function FixedTimeTrigger() {
   const contextSetState = useContext(CodeTypeDispatchContext);
   const contextState = useContext(CodeTypeListContext) || {};
-  const { nodeData } = contextState;
+  const { nodeData, timeNameOprion, ruleTimeTypeOption, endType } = contextState;
 
   const startTimeObj = moment.utc(nodeData.startTime);
   const endTimeObj = moment.utc(nodeData.endTime);
@@ -69,7 +33,7 @@ export default function FixedTimeTrigger() {
             }}
           >
             <span style={{ fontSize: 12, marginBottom: 4 }}>Run at</span>
-            <TimeInput />
+            <TimeInput dataKey='runAtTime' />
           </div>
           <div
             style={{
@@ -192,7 +156,7 @@ export default function FixedTimeTrigger() {
                   }
                 />
               </div>
-              {nodeData.endType === "After a date" && (
+              {nodeData.endType === "afterADate" && (
                 <div
                   style={{
                     display: "flex",
@@ -222,7 +186,7 @@ export default function FixedTimeTrigger() {
                   />
                 </div>
               )}
-              {nodeData.endType === "After number of runs" && (
+              {nodeData.endType === "afterNumberOfRuns" && (
                 <div
                   style={{
                     display: "flex",

@@ -1,10 +1,12 @@
 import React, { useContext } from "react";
 import * as R from "ramda";
 
-import { CodeTypeDispatchContext } from "../CodeTypeList";
+import { CodeTypeDispatchContext, CodeTypeListContext } from "../CodeTypeList";
 
 export default function TypeList({ typeList }) {
   const contextSetState = useContext(CodeTypeDispatchContext);
+  const contextState = useContext(CodeTypeListContext) || {};
+  const { nodeData } = contextState;
 
   return (
     <div style={{ userSelect: "none", flex: 1, overflowY: "scroll" }}>
@@ -23,11 +25,16 @@ export default function TypeList({ typeList }) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {R.addIndex(R.map)((item, idx) => {
-                const { id, title, desc, icon } = item;
+                const { id, title, desc, icon, isRoot, initData } = item;
                 return (
                   <div
                     key={id}
-                    onClick={() => contextSetState({ activeTypeItem: item })}
+                    onClick={() =>
+                      contextSetState({
+                        activeTypeItem: item,
+                        nodeData: { ...initData, isRoot, activeType: id },
+                      })
+                    }
                     style={{
                       width: 300,
                       padding: 8,

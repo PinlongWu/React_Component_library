@@ -22,6 +22,7 @@ const returnTimeStr = (time, noUTC, accurate) => {
   return moment.utc(time).format(format);
 };
 const isNotWeekDay = (time) => time.day() === 0 || time.day() === 6; // // 如果当前日期是周末（0表示星期日，6表示星期六）
+const toTimeTamp = (timeStr) => moment.duration(timeStr).asMilliseconds();
 
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,6 +39,8 @@ export default function TimeAlter() {
     endTime,
     maxNum,
     timeZoneValue,
+    notRunBefore,
+    notRunAfter
   } = nodeData || {};
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
@@ -56,10 +59,12 @@ export default function TimeAlter() {
       errorText = errorContent;
     } else if (!timeRgx.test(runAtTime)) {
       errorText = `TimeTrigger -> Time does not match "hh:ss" format`;
-    } else if (endType === "After a date" && endTime - startTime < 0) {
+    } else if (endType === "afterADate" && endTime - startTime < 0) {
       errorText = `Earliest start (${returnTimeStr(
         startTime
       )}) must be <= until (${returnTimeStr(endTime)})`;
+    }else if(toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)){
+      errorText = `Don't run before must be <= Don't run after`
     }
     return errorText;
   };
@@ -152,7 +157,7 @@ export default function TimeAlter() {
 
   const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
   const getEndTimeFlag = (time) =>
-    endType === "After a date"
+    endType === "afterADate"
       ? endTime >= (isNumber(time) ? time : time.valueOf())
       : true;
 
@@ -249,7 +254,7 @@ export default function TimeAlter() {
             nextWorkday.subtract(1, "day");
           }
           const endMonthFlag =
-            endType === "After a date"
+            endType === "afterADate"
               ? nextWorkday.valueOf() <= untilLastWorkDay.valueOf() &&
                 nextWorkday.valueOf() <= endTime
               : true;
@@ -281,7 +286,7 @@ export default function TimeAlter() {
             time.subtract(1, "day");
           }
           const endWeekFlag =
-            endType === "After a date"
+            endType === "afterADate"
               ? time.valueOf() <= untilLastWeekDay.valueOf() &&
                 time.valueOf() <= endTime
               : true;
@@ -305,17 +310,17 @@ export default function TimeAlter() {
     }
     setState({ timeList: [], loading: true, errorContent: null });
     let times = [];
-    if (ruleTimeType === "Every day") {
+    if (ruleTimeType === "everyDay") {
       times = await getEveryDay();
-    } else if (ruleTimeType === "Every working day") {
+    } else if (ruleTimeType === "everyWorkingDay") {
       times = await getEvelyWorkingDay();
-    } else if (ruleTimeType === "First working day of the month") {
+    } else if (ruleTimeType === "firstWorkingDayOfTheMonth") {
       times = await getFirstWorkingDayOfTheMonth();
-    } else if (ruleTimeType === "First working day of the week") {
+    } else if (ruleTimeType === "firstWorkingDayOfTheWeek") {
       times = await getFirstWorkingDayOfTheWeek();
-    } else if (ruleTimeType === "Last working day of the month") {
+    } else if (ruleTimeType === "lastWorkingDayOfTheMonth") {
       times = await getLastWorkingDayOfTheMonth();
-    } else if (ruleTimeType === "Last working day of the week") {
+    } else if (ruleTimeType === "lastWorkingDayOfTheWeek") {
       times = await getLastWorkingDayOfTheWeek();
     }
     await sleep(500);

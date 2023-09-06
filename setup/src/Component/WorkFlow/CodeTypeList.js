@@ -12,37 +12,48 @@ import TypeList from "./components/TypeList";
 const CodeTypeListContext = createContext(null);
 const CodeTypeDispatchContext = createContext(null);
 
+const timeNameOprion = R.map(
+  (item) => ({ label: item, value: item }),
+  moment.tz.names() || []
+);
+
 export default function CodeTypeList({ isRoot = true }) {
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
     {
       timeRgx: /^([0-1]{1}[0-9]|2[0-3]):[0-5][0-9]$/,
+      timeNameOprion,
+      ruleTimeTypeOption: [
+        { value: "everyDay", label: "Every day" },
+        { value: "everyWorkingDay", label: "Every working day" },
+        {
+          value: "firstWorkingDayOfTheMonth",
+          label: "First working day of the month",
+        },
+        {
+          value: "firstWorkingDayOfTheWeek",
+          label: "First working day of the week",
+        },
+        {
+          value: "lastWorkingDayOfTheMonth",
+          label: "Last working day of the month",
+        },
+        {
+          value: "lastWorkingDayOfTheWeek",
+          label: "Last working day of the week",
+        },
+      ],
+      endType: [
+        { value: "never", label: "Never" },
+        { value: "afterADate", label: "After a date" },
+        {
+          value: "afterNumberOfRuns",
+          label: "After number of runs",
+        },
+      ],
       searchVal: "",
       activeTypeItem: null,
-      nodeData: {
-        type: "Events",
-        codeContent: "",
-
-        runAtTime: "00:00",
-        ruleTimeType: "Every day",
-        timeZoneValue: "Asia/Shanghai",
-        startTime: moment.utc().startOf("days").valueOf(),
-        endType: "Never",
-        endTime: moment.utc().endOf("days").valueOf(),
-        maxNum: 10,
-      },
-      localNodeData: {
-        type: "Events",
-        codeContent: "",
-
-        runAtTime: "00:00",
-        ruleTimeType: "Every day",
-        timeZoneValue: "Asia/Shanghai",
-        startTime: moment.utc().startOf("days").valueOf(),
-        endType: "Never",
-        endTime: moment.utc().endOf("days").valueOf(),
-        maxNum: 10,
-      },
+      nodeData: {},
     }
   );
   const { searchVal, activeTypeItem } = state;
