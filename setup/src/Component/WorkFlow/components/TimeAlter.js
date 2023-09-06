@@ -13,8 +13,8 @@ import {
 
 const returnTimeStr = (time, noUTC, accurate) => {
   let format = "YYYY/MM/DD";
-  if(accurate){
-    format += ' HH:mm:ss'
+  if (accurate) {
+    format += " HH:mm:ss";
   }
   if (noUTC) {
     return time.format(format);
@@ -40,7 +40,7 @@ export default function TimeAlter() {
     maxNum,
     timeZoneValue,
     notRunBefore,
-    notRunAfter
+    notRunAfter,
   } = nodeData || {};
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
@@ -59,12 +59,16 @@ export default function TimeAlter() {
       errorText = errorContent;
     } else if (!timeRgx.test(runAtTime)) {
       errorText = `TimeTrigger -> Time does not match "hh:ss" format`;
+    } else if (!timeRgx.test(notRunBefore)) {
+      errorText = `Don't run before -> Time does not match "hh:ss" format`;
+    } else if (!timeRgx.test(notRunAfter)) {
+      errorText = `Don't run after -> Time does not match "hh:ss" format`;
     } else if (endType === "afterADate" && endTime - startTime < 0) {
       errorText = `Earliest start (${returnTimeStr(
         startTime
       )}) must be <= until (${returnTimeStr(endTime)})`;
-    }else if(toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)){
-      errorText = `Don't run before must be <= Don't run after`
+    } else if (toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)) {
+      errorText = `Don't run before must be <= Don't run after`;
     }
     return errorText;
   };
@@ -342,7 +346,12 @@ export default function TimeAlter() {
       <Alert
         message={
           <>
-            {errorText && <div>{errorText}</div>}
+            {errorText && (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <InfoCircleOutlined style={{ marginRight: 8 }} />
+                {errorText}
+              </div>
+            )}
             {!errorText && (
               <div style={{ display: "flex" }}>
                 <InfoCircleOutlined style={{ marginRight: 8, paddingTop: 8 }} />
@@ -397,7 +406,7 @@ export default function TimeAlter() {
             )}
           </>
         }
-        type="info"
+        type={errorText ? "error" : "info"}
         style={{ margin: "10px 0 20px 0" }}
       />
     </div>
