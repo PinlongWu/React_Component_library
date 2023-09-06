@@ -57,17 +57,21 @@ export default function TimeAlter() {
     let errorText = "";
     if (errorContent) {
       errorText = errorContent;
-    } else if (!timeRgx.test(runAtTime)) {
+    } else if (runAtTime && !timeRgx.test(runAtTime)) {
       errorText = `TimeTrigger -> Time does not match "hh:ss" format`;
-    } else if (!timeRgx.test(notRunBefore)) {
+    } else if (notRunBefore && !timeRgx.test(notRunBefore)) {
       errorText = `Don't run before -> Time does not match "hh:ss" format`;
-    } else if (!timeRgx.test(notRunAfter)) {
+    } else if (notRunAfter && !timeRgx.test(notRunAfter)) {
       errorText = `Don't run after -> Time does not match "hh:ss" format`;
     } else if (endType === "afterADate" && endTime - startTime < 0) {
       errorText = `Earliest start (${returnTimeStr(
         startTime
       )}) must be <= until (${returnTimeStr(endTime)})`;
-    } else if (toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)) {
+    } else if (
+      notRunBefore &&
+      notRunAfter &&
+      toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)
+    ) {
       errorText = `Don't run before must be <= Don't run after`;
     }
     return errorText;
