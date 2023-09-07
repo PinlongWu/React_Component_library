@@ -11,18 +11,41 @@ import {
   UpOutlined,
 } from "@ant-design/icons";
 
-const returnTimeStr = (time, noUTC, accurate) => {
-  let format = "YYYY/MM/DD";
-  if (accurate) {
-    format += " HH:mm:ss";
-  }
+const returnTimeStr = (time, noUTC, format = "YYYY/MM/DD") => {
   if (noUTC) {
     return time.format(format);
   }
   return moment.utc(time).format(format);
 };
+
 const isNotWeekDay = (time) => time.day() === 0 || time.day() === 6; // // 如果当前日期是周末（0表示星期日，6表示星期六）
+
 const toTimeTamp = (timeStr) => moment.duration(timeStr).asMilliseconds();
+
+const minsToTimeTamp = (mins) =>
+  moment.duration(mins, "minutes").asMilliseconds();
+
+const addTimeTamp = ({ activeType, runEveryMins, tamp = 0 }) => {
+  if (activeType === "timeIntervalTrigger") {
+    return minsToTimeTamp(runEveryMins);
+  }
+  return tamp;
+};
+
+const retrunTimeFormat = ({ activeType, time, runEveryMins }) => {
+  return returnTimeStr(
+    time + addTimeTamp({ activeType, runEveryMins }),
+    false,
+    "YYYY/MM/DD HH:mm"
+  );
+};
+
+const getFlagTime = (activeType, time, currentTime) => {
+  if (activeType === "timeIntervalTrigger") {
+    return currentTime;
+  }
+  return time;
+};
 
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,6 +55,7 @@ export default function TimeAlter() {
   const contextState = useContext(CodeTypeListContext) || {};
   const { nodeData, timeRgx } = contextState;
   const {
+    activeType,
     runAtTime,
     ruleTimeType,
     endType,
@@ -41,6 +65,7 @@ export default function TimeAlter() {
     timeZoneValue,
     notRunBefore,
     notRunAfter,
+    runEveryMins,
   } = nodeData || {};
   const [state, setState] = useReducer(
     (oldVal, newVal) => ({ ...oldVal, ...newVal }),
@@ -119,48 +144,53 @@ export default function TimeAlter() {
 
   const returnStartTime = (data) => {
     const { isMonth, isEndOfMonth, isWeek, isEndWeek } = data || {};
-    const currentTime = moment.utc(returnTimeStr(moment(), true, true)); // 当前时间
 
-    const timeStartStr = `${returnTimeStr(startTime)} ${runAtTime}`; // 设置-开始时间
-    const timeStartTamp = moment.utc(timeStartStr).valueOf(); // 设置-开始时间戳
-    const fristWorkDay = getCurrentStartMonthWeekDay(moment.utc(timeStartStr)); // 设置-开始时间的当月第一个工作日
-    const lastWorkDay = getCurrentEndMonthWeekDay(moment.utc(timeStartStr)); // 设置-开始时间的当月最后一个工作日
-    const fristWeekDay = getCurrentStartWeekWeekDay(moment.utc(timeStartStr)); // 设置-开始时间的当周第一个工作日
-    const lastWeekDay = getCurrentEndWeekWeekDay(moment.utc(timeStartStr)); // 设置-开始时间的当周最后一个工作日
-    const untilLastWorkDay = getCurrentEndMonthWeekDay(
-      moment.utc(endTime).endOf("day")
-    ); // 设置-until时间当月的最后一个工作日
-    const untilLastWeekDay = getCurrentEndWeekWeekDay(
-      moment.utc(endTime).endOf("day")
-    ); // 设置-until时间当周的最后一个工作日
+    const currentTime = moment.utc(
+      returnTimeStr(moment(), true, "YYYY/MM/DD HH:mm")
+    ); // 当前时间
+    const timeStart = moment.utc(`${returnTimeStr(startTime)} ${runAtTime}`); // 设置-开始时间
+    const currentTimeTamp = currentTime.valueOf();
+    const timeStartTamp = timeStart.valueOf();
 
-    let flag = timeStartTamp > currentTime.valueOf();
     if (isMonth) {
-      flag = timeStartTamp <= fristWorkDay.valueOf();
+      const fristWorkDayTamp = getCurrentStartMonthWeekDay(timeStart).valueOf(); // 设置-开始时间的当月第一个工作日
+      const flag = timeStartTamp <= fristWorkDayTamp;
+      const time = flag
+        ? timeStart
+        : timeStart.add(1, "month").startOf("month");
+      return { time };
     }
+
     if (isEndOfMonth) {
-      flag = timeStartTamp <= lastWorkDay.startOf("day").valueOf();
+      const lastWorkDayTamp = getCurrentEndMonthWeekDay(timeStart)
+        .startOf("day")
+        .valueOf(); // 设置-开始时间的当月最后一个工作日
+      const flag = timeStartTamp <= lastWorkDayTamp;
+      const time = flag
+        ? timeStart
+        : timeStart.add(1, "month").startOf("month");
+      return { time };
     }
+
     if (isWeek) {
-      flag = timeStartTamp <= fristWeekDay.valueOf();
+      const fristWeekDayTamp = getCurrentStartWeekWeekDay(timeStart).valueOf(); // 设置-开始时间的当周第一个工作日
+      const flag = timeStartTamp <= fristWeekDayTamp;
+      const time = flag ? timeStart : timeStart.add(1, "week").startOf("week");
+      return { time };
     }
+
     if (isEndWeek) {
-      flag = timeStartTamp <= lastWeekDay.startOf("day").valueOf();
+      const lastWeekDayTamp = getCurrentEndWeekWeekDay(timeStart)
+        .startOf("day")
+        .valueOf(); // 设置-开始时间的当周最后一个工作日
+      const flag = timeStartTamp <= lastWeekDayTamp;
+      const time = flag ? timeStart : timeStart.add(1, "week").startOf("week");
+      return { time };
     }
 
-    let time = flag ? startTime : startTime + 86400000; // flag: true 就用当前时间开始算，否则加一天开始算
-    if (isMonth) {
-      time = flag
-        ? moment.utc(startTime)
-        : moment.utc(startTime).add(1, "month").startOf("month");
-    }
-    if (isWeek) {
-      time = flag
-        ? moment.utc(startTime)
-        : moment.utc(startTime).add(1, "week").startOf("week");
-    }
-
-    return { time, untilLastWorkDay, untilLastWeekDay };
+    const flag = timeStartTamp > currentTimeTamp;
+    const time = flag ? timeStartTamp : timeStartTamp + 86400000;
+    return { time };
   };
 
   const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
@@ -175,8 +205,8 @@ export default function TimeAlter() {
         let times = [];
         let { time } = returnStartTime();
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
-          times.push(`${returnTimeStr(time)} ${runAtTime}`);
-          time += 86400000;
+          times.push(`${retrunTimeFormat({ activeType, time, runEveryMins })}`);
+          time += addTimeTamp({ activeType, runEveryMins, tamp: 86400000 });
         }
         resolve(times);
       } catch (error) {
@@ -192,9 +222,12 @@ export default function TimeAlter() {
         let times = [];
         let { time } = returnStartTime();
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
-          if (!isNotWeekDay(moment.utc(time)))
-            times.push(`${returnTimeStr(time)} ${runAtTime}`); // 判断是否是工作日
-          time += 86400000;
+          if (!isNotWeekDay(moment.utc(time))) {
+            times.push(
+              `${retrunTimeFormat({ activeType, time, runEveryMins })}`
+            );
+          }
+          time += addTimeTamp({ activeType, runEveryMins, tamp: 86400000 });
         }
         resolve(times);
       } catch (error) {
@@ -251,10 +284,13 @@ export default function TimeAlter() {
     return new Promise((resolve) => {
       try {
         let times = [];
-        let { time, untilLastWorkDay } = returnStartTime({
-          isMonth: true,
+        let { time } = returnStartTime({
           isEndOfMonth: true,
         });
+        const untilLastWorkDay = getCurrentEndMonthWeekDay(
+          moment.utc(endTime).endOf("day")
+        ); // 设置-until时间当月的最后一个工作日
+
         const futureMonths = getMaxNum(); // 想要计算的未来月数
         for (let i = 0; i < futureMonths && getEndTimeFlag(time); i++) {
           let nextWorkday = time.endOf("month").startOf("day");
@@ -283,10 +319,10 @@ export default function TimeAlter() {
     return new Promise((resolve) => {
       try {
         let times = [];
-        let { time, untilLastWeekDay } = returnStartTime({
-          isWeek: true,
-          isEndWeek: true,
-        });
+        let { time } = returnStartTime({ isEndWeek: true });
+        const untilLastWeekDay = getCurrentEndWeekWeekDay(
+          moment.utc(endTime).endOf("day")
+        ); // 设置-until时间当周的最后一个工作日
         const futureWeeks = getMaxNum(); // 想要计算的未来周数
         for (let i = 0; i < futureWeeks && getEndTimeFlag(time); i++) {
           time = time.endOf("week").startOf("day");
@@ -341,7 +377,15 @@ export default function TimeAlter() {
     return () => {
       flag = true;
     };
-  }, [runAtTime, ruleTimeType, startTime, endType, endTime, maxNum]);
+  }, [
+    runAtTime,
+    ruleTimeType,
+    startTime,
+    endType,
+    endTime,
+    maxNum,
+    runEveryMins,
+  ]);
 
   const errorText = returnErrorText();
 
