@@ -32,19 +32,12 @@ const addTimeTamp = ({ activeType, runEveryMins, tamp = 0 }) => {
   return tamp;
 };
 
-const retrunTimeFormat = ({ activeType, time, runEveryMins }) => {
+const retrunTimeFormat = ({ time, activeType, runEveryMins }) => {
   return returnTimeStr(
-    time + addTimeTamp({ activeType, runEveryMins }),
+    time + addTimeTamp(activeType, runEveryMins),
     false,
     "YYYY/MM/DD HH:mm"
   );
-};
-
-const getFlagTime = (activeType, time, currentTime) => {
-  if (activeType === "timeIntervalTrigger") {
-    return currentTime;
-  }
-  return time;
 };
 
 const sleep = (ms) => {
@@ -77,6 +70,28 @@ export default function TimeAlter() {
     }
   );
   const { errorContent, showListFlag, loading, timeList } = state;
+
+  const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
+
+  const getEndTimeFlag = (time) =>
+    endType === "afterADate"
+      ? endTime >= (isNumber(time) ? time : time.valueOf())
+      : true;
+
+  const searchStartTime = ({
+    currentTimeTamp,
+    timeStartTamp,
+    runEveryMins,
+  }) => {
+    let startTime = null;
+    while (true && !startTime) {
+      if (currentTimeTamp <= timeStartTamp) {
+        startTime = timeStartTamp;
+      }
+      timeStartTamp += minsToTimeTamp(runEveryMins);
+    }
+    return startTime;
+  };
 
   const returnErrorText = () => {
     let errorText = "";
@@ -189,15 +204,12 @@ export default function TimeAlter() {
     }
 
     const flag = timeStartTamp > currentTimeTamp;
-    const time = flag ? timeStartTamp : timeStartTamp + 86400000;
+    let time = flag ? timeStartTamp : timeStartTamp + 86400000;
+    if (activeType === "timeIntervalTrigger" && !flag) {
+      time = searchStartTime({ currentTimeTamp, timeStartTamp, runEveryMins });
+    }
     return { time };
   };
-
-  const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
-  const getEndTimeFlag = (time) =>
-    endType === "afterADate"
-      ? endTime >= (isNumber(time) ? time : time.valueOf())
-      : true;
 
   const getEveryDay = () => {
     return new Promise((resolve) => {
@@ -205,8 +217,8 @@ export default function TimeAlter() {
         let times = [];
         let { time } = returnStartTime();
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
-          times.push(`${retrunTimeFormat({ activeType, time, runEveryMins })}`);
-          time += addTimeTamp({ activeType, runEveryMins, tamp: 86400000 });
+          times.push(`${retrunTimeFormat({ time, activeType, runEveryMins })}`);
+          time += addTimeTamp({ tamp: 86400000, activeType, runEveryMins });
         }
         resolve(times);
       } catch (error) {
@@ -224,10 +236,10 @@ export default function TimeAlter() {
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
           if (!isNotWeekDay(moment.utc(time))) {
             times.push(
-              `${retrunTimeFormat({ activeType, time, runEveryMins })}`
+              `${retrunTimeFormat({ time, activeType, runEveryMins })}`
             );
           }
-          time += addTimeTamp({ activeType, runEveryMins, tamp: 86400000 });
+          time += addTimeTamp({ tamp: 86400000, activeType, runEveryMins });
         }
         resolve(times);
       } catch (error) {
@@ -244,12 +256,17 @@ export default function TimeAlter() {
         let { time } = returnStartTime({ isMonth: true });
         const futureMonths = getMaxNum(); // 想要计算的未来月数
         for (let i = 0; i < futureMonths && getEndTimeFlag(time); i++) {
-          let nextWorkday = time.startOf("month");
-          while (isNotWeekDay(nextWorkday)) {
-            nextWorkday.add(1, "day");
+          while (isNotWeekDay(time)) {
+            time.add(1, "day");
           }
-          times.push(`${returnTimeStr(nextWorkday, true)} ${runAtTime}`);
-          time.add(1, "month");
+          times.push(
+            `${retrunTimeFormat({
+              time: time.valueOf() + toTimeTamp(runAtTime),
+              activeType,
+              runEveryMins,
+            })}`
+          );
+          time.add(1, "month").startOf("month");
         }
         resolve(times);
       } catch (error) {
@@ -269,8 +286,14 @@ export default function TimeAlter() {
           while (isNotWeekDay(time)) {
             time.add(1, "day");
           }
-          times.push(`${returnTimeStr(time, true)} ${runAtTime}`);
-          time.add(1, "week");
+          times.push(
+            `${retrunTimeFormat({
+              time: time.valueOf() + toTimeTamp(runAtTime),
+              activeType,
+              runEveryMins,
+            })}`
+          );
+          time.add(1, "week").startOf("week");
         }
         resolve(times);
       } catch (error) {
@@ -293,19 +316,25 @@ export default function TimeAlter() {
 
         const futureMonths = getMaxNum(); // 想要计算的未来月数
         for (let i = 0; i < futureMonths && getEndTimeFlag(time); i++) {
-          let nextWorkday = time.endOf("month").startOf("day");
-          while (isNotWeekDay(nextWorkday)) {
-            nextWorkday.subtract(1, "day");
+          time = time.endOf("month").startOf("day");
+          while (isNotWeekDay(time)) {
+            time.subtract(1, "day");
           }
           const endMonthFlag =
             endType === "afterADate"
-              ? nextWorkday.valueOf() <= untilLastWorkDay.valueOf() &&
-                nextWorkday.valueOf() <= endTime
+              ? time.valueOf() <= untilLastWorkDay.valueOf() &&
+                time.valueOf() <= endTime
               : true;
           if (endMonthFlag) {
-            times.push(`${returnTimeStr(nextWorkday, true)} ${runAtTime}`);
+            times.push(
+              `${retrunTimeFormat({
+                time: time.valueOf() + toTimeTamp(runAtTime),
+                activeType,
+                runEveryMins,
+              })}`
+            );
           }
-          time.add(1, "month");
+          time.add(1, "month").startOf("month");
         }
         resolve(times);
       } catch (error) {
@@ -335,9 +364,15 @@ export default function TimeAlter() {
                 time.valueOf() <= endTime
               : true;
           if (endWeekFlag) {
-            times.push(`${returnTimeStr(time, true)} ${runAtTime}`);
+            times.push(
+              `${retrunTimeFormat({
+                time: time.valueOf() + toTimeTamp(runAtTime),
+                activeType,
+                runEveryMins,
+              })}`
+            );
           }
-          time.add(1, "week");
+          time.add(1, "week").startOf("week");
         }
         resolve(times);
       } catch (error) {
