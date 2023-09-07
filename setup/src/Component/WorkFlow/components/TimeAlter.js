@@ -20,14 +20,14 @@ const returnTimeStr = (time, noUTC, format = "YYYY/MM/DD") => {
 
 const isNotWeekDay = (time) => time.day() === 0 || time.day() === 6; // // 如果当前日期是周末（0表示星期日，6表示星期六）
 
-const toTimeTamp = (timeStr) => moment.duration(timeStr).asMilliseconds();
+const strToTimeTamp = (timeStr) => moment.duration(timeStr).asMilliseconds();
 
-const minsToTimeTamp = (mins) =>
-  moment.duration(mins, "minutes").asMilliseconds();
+const toTimeTamp = (time, type = "minutes") =>
+  moment.duration(time, type).asMilliseconds();
 
 const addTimeTamp = ({ activeType, runEveryMins, tamp = 0 }) => {
   if (activeType === "timeIntervalTrigger") {
-    return minsToTimeTamp(runEveryMins);
+    return toTimeTamp(runEveryMins);
   }
   return tamp;
 };
@@ -73,10 +73,29 @@ export default function TimeAlter() {
 
   const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
 
-  const getEndTimeFlag = (time) =>
-    endType === "afterADate"
-      ? endTime >= (isNumber(time) ? time : time.valueOf())
-      : true;
+  const getEndTimeFlag = (time) => {
+    const timeTamp = isNumber(time) ? time : time.valueOf();
+    if (endType === "afterADate") {
+      return endTime >= timeTamp;
+    }
+    return true;
+  };
+
+  const getNotRunTamp = (time) => {
+    let notRunFlag = true;
+    const newTime = isNumber(time) ? moment.utc(time) : time;
+    const notRunBeforeTamp = strToTimeTamp(notRunBefore);
+    const notRunAfterTamp = strToTimeTamp(notRunAfter);
+    const hoursAndMinutesTimestamp =
+      toTimeTamp(newTime.hours(), "hours") +
+      toTimeTamp(newTime.minutes());
+    if (activeType === "timeIntervalTrigger") {
+      notRunFlag =
+        notRunBeforeTamp <= hoursAndMinutesTimestamp &&
+        hoursAndMinutesTimestamp <= notRunAfterTamp;
+    }
+    return notRunFlag;
+  };
 
   const searchStartTime = ({
     currentTimeTamp,
@@ -88,9 +107,31 @@ export default function TimeAlter() {
       if (currentTimeTamp <= timeStartTamp) {
         startTime = timeStartTamp;
       }
-      timeStartTamp += minsToTimeTamp(runEveryMins);
+      timeStartTamp += toTimeTamp(runEveryMins);
     }
     return startTime;
+  };
+
+  const splitDaysBasedOnMinutes = ({ time, times }) => {
+    const startTime = time.clone().startOf("day");
+    const endTime = time.clone().endOf("day");
+    const currentTime = startTime.clone();
+    while (
+      currentTime.isBefore(endTime) &&
+      times.length < getMaxNum() &&
+      getEndTimeFlag(currentTime)
+    ) {
+      if (getNotRunTamp(currentTime)) {
+        times.push(
+          `${retrunTimeFormat({
+            time: currentTime.valueOf(),
+            activeType,
+            runEveryMins,
+          })}`
+        );
+      }
+      currentTime.add(runEveryMins, "minute");
+    }
   };
 
   const returnErrorText = () => {
@@ -110,7 +151,7 @@ export default function TimeAlter() {
     } else if (
       notRunBefore &&
       notRunAfter &&
-      toTimeTamp(notRunBefore) > toTimeTamp(notRunAfter)
+      strToTimeTamp(notRunBefore) > strToTimeTamp(notRunAfter)
     ) {
       errorText = `Don't run before must be <= Don't run after`;
     }
@@ -217,7 +258,11 @@ export default function TimeAlter() {
         let times = [];
         let { time } = returnStartTime();
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
-          times.push(`${retrunTimeFormat({ time, activeType, runEveryMins })}`);
+          if (getNotRunTamp(time)) {
+            times.push(
+              `${retrunTimeFormat({ time, activeType, runEveryMins })}`
+            );
+          }
           time += addTimeTamp({ tamp: 86400000, activeType, runEveryMins });
         }
         resolve(times);
@@ -234,7 +279,7 @@ export default function TimeAlter() {
         let times = [];
         let { time } = returnStartTime();
         while (times.length < getMaxNum() && getEndTimeFlag(time)) {
-          if (!isNotWeekDay(moment.utc(time))) {
+          if (!isNotWeekDay(moment.utc(time)) && getNotRunTamp(time)) {
             times.push(
               `${retrunTimeFormat({ time, activeType, runEveryMins })}`
             );
@@ -259,13 +304,19 @@ export default function TimeAlter() {
           while (isNotWeekDay(time)) {
             time.add(1, "day");
           }
-          times.push(
-            `${retrunTimeFormat({
-              time: time.valueOf() + toTimeTamp(runAtTime),
-              activeType,
-              runEveryMins,
-            })}`
-          );
+          if (activeType === "timeIntervalTrigger") {
+            // 根据runEveryMins进行分割
+            splitDaysBasedOnMinutes({ time, times });
+          } else {
+            times.push(
+              `${retrunTimeFormat({
+                time: time.valueOf() + strToTimeTamp(runAtTime),
+                activeType,
+                runEveryMins,
+              })}`
+            );
+          }
+
           time.add(1, "month").startOf("month");
         }
         resolve(times);
@@ -286,13 +337,19 @@ export default function TimeAlter() {
           while (isNotWeekDay(time)) {
             time.add(1, "day");
           }
-          times.push(
-            `${retrunTimeFormat({
-              time: time.valueOf() + toTimeTamp(runAtTime),
-              activeType,
-              runEveryMins,
-            })}`
-          );
+          if (activeType === "timeIntervalTrigger") {
+            // 根据runEveryMins进行分割
+            splitDaysBasedOnMinutes({ time, times });
+          } else {
+            times.push(
+              `${retrunTimeFormat({
+                time: time.valueOf() + strToTimeTamp(runAtTime),
+                activeType,
+                runEveryMins,
+              })}`
+            );
+          }
+
           time.add(1, "week").startOf("week");
         }
         resolve(times);
@@ -326,13 +383,18 @@ export default function TimeAlter() {
                 time.valueOf() <= endTime
               : true;
           if (endMonthFlag) {
-            times.push(
-              `${retrunTimeFormat({
-                time: time.valueOf() + toTimeTamp(runAtTime),
-                activeType,
-                runEveryMins,
-              })}`
-            );
+            if (activeType === "timeIntervalTrigger") {
+              // 根据runEveryMins进行分割
+              splitDaysBasedOnMinutes({ time, times });
+            } else {
+              times.push(
+                `${retrunTimeFormat({
+                  time: time.valueOf() + strToTimeTamp(runAtTime),
+                  activeType,
+                  runEveryMins,
+                })}`
+              );
+            }
           }
           time.add(1, "month").startOf("month");
         }
@@ -364,13 +426,18 @@ export default function TimeAlter() {
                 time.valueOf() <= endTime
               : true;
           if (endWeekFlag) {
-            times.push(
-              `${retrunTimeFormat({
-                time: time.valueOf() + toTimeTamp(runAtTime),
-                activeType,
-                runEveryMins,
-              })}`
-            );
+            if (activeType === "timeIntervalTrigger") {
+              // 根据runEveryMins进行分割
+              splitDaysBasedOnMinutes({ time, times });
+            } else {
+              times.push(
+                `${retrunTimeFormat({
+                  time: time.valueOf() + strToTimeTamp(runAtTime),
+                  activeType,
+                  runEveryMins,
+                })}`
+              );
+            }
           }
           time.add(1, "week").startOf("week");
         }
@@ -420,6 +487,8 @@ export default function TimeAlter() {
     endTime,
     maxNum,
     runEveryMins,
+    notRunBefore,
+    notRunAfter,
   ]);
 
   const errorText = returnErrorText();
