@@ -40,6 +40,14 @@ const retrunTimeFormat = ({ time, activeType, runEveryMins }) => {
   );
 };
 
+const getRunTimeTamp = ({ activeType, runAtTime, runEveryMins }) => {
+  let timeTamp = strToTimeTamp(runAtTime);
+  if (activeType === "timeIntervalTrigger") {
+    timeTamp += toTimeTamp(runEveryMins);
+  }
+  return timeTamp;
+};
+
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -73,6 +81,12 @@ export default function TimeAlter() {
 
   const getMaxNum = () => (maxNum > 10 ? 10 : maxNum);
 
+  const getCurrentTime = () =>
+    moment.utc(returnTimeStr(moment(), true, "YYYY/MM/DD HH:mm"));
+
+  const getSetStartTime = () =>
+    moment.utc(`${returnTimeStr(startTime)} ${runAtTime}`);
+
   const getEndTimeFlag = (time) => {
     const timeTamp = isNumber(time) ? time : time.valueOf();
     if (endType === "afterADate") {
@@ -87,8 +101,7 @@ export default function TimeAlter() {
     const notRunBeforeTamp = strToTimeTamp(notRunBefore);
     const notRunAfterTamp = strToTimeTamp(notRunAfter);
     const hoursAndMinutesTimestamp =
-      toTimeTamp(newTime.hours(), "hours") +
-      toTimeTamp(newTime.minutes());
+      toTimeTamp(newTime.hours(), "hours") + toTimeTamp(newTime.minutes());
     if (activeType === "timeIntervalTrigger") {
       notRunFlag =
         notRunBeforeTamp <= hoursAndMinutesTimestamp &&
@@ -121,7 +134,12 @@ export default function TimeAlter() {
       times.length < getMaxNum() &&
       getEndTimeFlag(currentTime)
     ) {
-      if (getNotRunTamp(currentTime)) {
+      const runStartTime = searchStartTime({
+        currentTimeTamp: getCurrentTime().valueOf(),
+        timeStartTamp: getSetStartTime().valueOf(),
+        runEveryMins,
+      })
+      if (getNotRunTamp(currentTime) && !currentTime.isBefore(runStartTime)) {
         times.push(
           `${retrunTimeFormat({
             time: currentTime.valueOf(),
@@ -201,15 +219,15 @@ export default function TimeAlter() {
   const returnStartTime = (data) => {
     const { isMonth, isEndOfMonth, isWeek, isEndWeek } = data || {};
 
-    const currentTime = moment.utc(
-      returnTimeStr(moment(), true, "YYYY/MM/DD HH:mm")
-    ); // 当前时间
-    const timeStart = moment.utc(`${returnTimeStr(startTime)} ${runAtTime}`); // 设置-开始时间
+    const currentTime = getCurrentTime(); // 当前时间
+    const timeStart = getSetStartTime(); // 设置-开始时间
     const currentTimeTamp = currentTime.valueOf();
     const timeStartTamp = timeStart.valueOf();
 
     if (isMonth) {
-      const fristWorkDayTamp = getCurrentStartMonthWeekDay(timeStart).valueOf(); // 设置-开始时间的当月第一个工作日
+      const fristWorkDayTamp =
+        getCurrentStartMonthWeekDay(timeStart).valueOf() +
+        getRunTimeTamp({ activeType, runAtTime, runEveryMins }); // 设置-开始时间的当月第一个工作日
       const flag = timeStartTamp <= fristWorkDayTamp;
       const time = flag
         ? timeStart
@@ -218,9 +236,9 @@ export default function TimeAlter() {
     }
 
     if (isEndOfMonth) {
-      const lastWorkDayTamp = getCurrentEndMonthWeekDay(timeStart)
-        .startOf("day")
-        .valueOf(); // 设置-开始时间的当月最后一个工作日
+      const lastWorkDayTamp =
+        getCurrentEndMonthWeekDay(timeStart).startOf("day").valueOf() +
+        getRunTimeTamp({ activeType, runAtTime, runEveryMins }); // 设置-开始时间的当月最后一个工作日
       const flag = timeStartTamp <= lastWorkDayTamp;
       const time = flag
         ? timeStart
@@ -229,16 +247,18 @@ export default function TimeAlter() {
     }
 
     if (isWeek) {
-      const fristWeekDayTamp = getCurrentStartWeekWeekDay(timeStart).valueOf(); // 设置-开始时间的当周第一个工作日
+      const fristWeekDayTamp =
+        getCurrentStartWeekWeekDay(timeStart).valueOf() +
+        getRunTimeTamp({ activeType, runAtTime, runEveryMins }); // 设置-开始时间的当周第一个工作日
       const flag = timeStartTamp <= fristWeekDayTamp;
       const time = flag ? timeStart : timeStart.add(1, "week").startOf("week");
       return { time };
     }
 
     if (isEndWeek) {
-      const lastWeekDayTamp = getCurrentEndWeekWeekDay(timeStart)
-        .startOf("day")
-        .valueOf(); // 设置-开始时间的当周最后一个工作日
+      const lastWeekDayTamp =
+        getCurrentEndWeekWeekDay(timeStart).startOf("day").valueOf() +
+        getRunTimeTamp({ activeType, runAtTime, runEveryMins }); // 设置-开始时间的当周最后一个工作日
       const flag = timeStartTamp <= lastWeekDayTamp;
       const time = flag ? timeStart : timeStart.add(1, "week").startOf("week");
       return { time };
